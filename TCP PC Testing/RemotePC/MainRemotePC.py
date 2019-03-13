@@ -1,228 +1,225 @@
-import threading
+
+from threading import Thread
+from queue import Queue
 import time
 from PyQt5.QtWidgets import *
+import socket
 
-exitFlag = 0
+# action to send
 actionCode = 0
+# Message received from on-board PC
+msgRecv = 0
 
-class myThreadPrint (threading.Thread):
-   def __init__(self, threadID, name, counter):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.counter = counter
-   def run(self):
-      print ("Starting " + self.name)
-      print_time(self.name, 5, self.counter)
-      print ("Exiting " + self.name)
+# seconds before TCP times out
+timeOut = 10
 
-# Don't actually need this since one is supposed to run pyQt as main thread!!!!
-class myThreadUI (threading.Thread):
-   def __init__(self, threadID, name, actionParam):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.actionParam = actionParam
-   def run(self):
-      print ("Starting " + self.name)
-      createUI(self.actionParam)
-      print ("Exiting " + self.name)
+s = socket.socket()
+s.settimeout(timeOut)
+print ('global socket instance created')
 
-def print_time(threadName, counter, delay):
-   while counter:
-      if exitFlag:
-         threadName.exit()
-      time.sleep(delay)
-      print ("%s: %s" % (threadName, time.ctime(time.time())))
-      counter -= 1
-
+# reserve PORT so that it's not in use by something else:
+port = 12474
 
 ######################################################
 
-class myThreadTCP (threading.Thread):
-   def __init__(self, threadID, name, actionParam):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.name = name
-      self.actionParam = actionParam
-   def run(self):
-      print ("Starting " + self.name)
-      createUI(self.actionParam)
-      print ("Exiting " + self.name)
+
+# main thread for controlling TCP comms
+def threadTCP(threadname, q, port):
+    global actionCode
+    global msgRecv
+    print("threadTCP: ", actionCode)
+    # Bind it to the port
+    # Note that we have not typed any IP into the IP field..... we input an empty string ...
+    #     this makes server listen to requests coming from other computers on network
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # to prevent binding
+        s.bind(('', port))
+    except socket.error as exc:
+        print ("Caught exception socket.error : %s" % exc)
+
+    print("socket binded to %s"%(port))
+
+    # make server listen to requests
+    s.listen(5)                # where 5 = max number of queued connections
+    print('socket is listening')
 
 
+    try:
+        #establish connection with client
+        c, addr = s.accept()
+        c.send('Thank you for connecting')  
+        print ('got connection from', addr)
+    except KeyboardInterrupt:
+        print("No connection established. Terminating :( ")
+        s.close()
+        exit()
+    # flag for identifying if I'm waiting to send or recieve message
+    needToSend = 0
+    try:
+        loop = True
+        while loop: 
+            # obtain sensor data
+            print('trying to recv data from client')
+            msgRecv = c.recv(1024)
+            print("Message received from Client: %s" %msgRecv)
+            needToSend = 1
 
+            # decode sensor info 
+            # store data in a file
 
-s = socket.socket()
-print ('socket instance created')
+            # change the below line to something like 
+            #       01230123 or whatever that means send me more data!
+            print('trying to send data to client')
+            c.sendall(str(actionCode))
+            needToSend = 0
+            time.sleep(0.2)
+            # kill socket if UI is killed
+            if (actionCode == -1):
+                break
 
-# reserve PORT so that it's not in use by something else:
-port = 12464
+    except KeyboardInterrupt:
+        print("Ending program")
 
-# Bind it to the port
-# Note that we have not typed any IP into the IP field..... we input an empty string ... this makes server
-#     listen to requests coming from other computers on network
-try:
-	s.bind(('', port))
-except socket.error as exc:
-	print ("Caught exception socket.error : %s" % exc)
+    if not needToSend:
+        msgRecv = c.recv(1024)
+        print("FINAL message received and IGNORED: %s" %msgRecv)
 
-print("socket binded to %s"%(port))
+    c.send('9') # sends termination ID
 
-# make server listen to requests
-s.listen(5)                # where 5 = max number of queued connections
-print('socket is listening')
-
-
-try:
-	#establish connection with client
-	c, addr = s.accept()
-	c.send('Thank you for connecting')  
-	print ('got connection from', addr)
-except KeyboardInterrupt:
-	print("No connection established. Terminating :( ")
-	s.close()
-	exit()
-
-# flag for identifying if I'm waiting to send or recieve message
-needToSend = 0
-try:
-	loop = True
-	while loop:	
-		# obtain sensor data
-		print('trying to recv data from client')
-		msgRecv = c.recv(1024)
-		print("Message received from Client: %s" %msgRecv)
-		needToSend = 1
-
-		# decode sensor info 
-		# store data in a file
-
-		# change the below line to something like 
-		#		01230123 or whatever that means send me more data!
-		print('trying to send data to client')
-		c.sendall("Get me more data!!!")
-		needToSend = 0
-		time.sleep(2)
-
-except KeyboardInterrupt:
-	print("Ending program")
-
-if not needToSend:
-	msgRecv = c.recv(1024)
-	print("FINAL message received and IGNORED: %s" %msgRecv)
-
-c.send('0000') # sends termination ID
-
-# close connection
-c.shutdown(2)	
-c.close()
-print("Terminated TCP")
-
-
-
-
-
+    # close connection
+    c.shutdown(2)   
+    c.close()
+    print("Terminated TCP")
 
 ###################################################
 
+### Main Thread controlling UI ############
 
-def createUI(actionParam):
-	app = QApplication([])
-	app.setStyle('Fusion')
-	window = QWidget()
-	window.resize(800,800)
-	window.setWindowTitle("Robot Control")
-	layout = QGridLayout()
-	app.setStyleSheet("QPushButton { margin: 5ex; }")
+def threadUI(threadname, q):
+        print ("Starting thread4")
+        global actionCode
+        app = QApplication([])
+        app.setStyle('Fusion')
+        window = QWidget()
+        window.resize(800,800)
+        window.setWindowTitle("Robot Control")
+        layout = QGridLayout()
+        app.setStyleSheet("QPushButton { margin: 5ex; }")
 
-	actionCode = 0
+        #actionCode = 0
 
-	buttonF = QPushButton('Forward')
-	buttonRv = QPushButton('Reverse')
-	buttonL = QPushButton('Left')
-	buttonR = QPushButton('Right')
-	buttonCW = QPushButton('Turn CW')
-	buttonCCW = QPushButton('Turn CCW')
-	buttonS = QPushButton('STOP')
+        buttonF = QPushButton('Forward')
+        buttonRv = QPushButton('Reverse')
+        buttonL = QPushButton('Left')
+        buttonR = QPushButton('Right')
+        buttonCW = QPushButton('Turn CW')
+        buttonCCW = QPushButton('Turn CCW')
+        buttonS = QPushButton('STOP')
+        buttonTerminate = QPushButton('TERMINATE')
 
-	buttonF.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-	buttonRv.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-	buttonL.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-	buttonR.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-	buttonCW.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-	buttonCCW.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-	buttonS.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonF.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonRv.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonL.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonR.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonCW.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonCCW.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonS.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+        buttonTerminate.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
 
-	buttonF.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
-	buttonRv.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
-	buttonL.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
-	buttonR.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
-	buttonCW.setStyleSheet('QPushButton {background-color: #D7C4DA; color: purple;}')
-	buttonCCW.setStyleSheet('QPushButton {background-color: #D7C4DA; color: purple;}')
-	buttonS.setStyleSheet('QPushButton {background-color: #B22222; color: white; }')
+        buttonF.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
+        buttonRv.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
+        buttonL.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
+        buttonR.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
+        buttonCW.setStyleSheet('QPushButton {background-color: #D7C4DA; color: purple;}')
+        buttonCCW.setStyleSheet('QPushButton {background-color: #D7C4DA; color: purple;}')
+        buttonS.setStyleSheet('QPushButton {background-color: #B22222; color: white; }')
+        buttonTerminate.setStyleSheet('QPushButton {background-color: #CC0000; color: white; }')
 
-	font = buttonF.font()
-	font.setPointSize(24)
-	buttonF.setFont(font)
-	buttonRv.setFont(font)
-	buttonL.setFont(font)
-	buttonR.setFont(font)
-	buttonS.setFont(font)
-	buttonCCW.setFont(font)
-	buttonCW.setFont(font)
+        font = buttonF.font()
+        font.setPointSize(24)
+        buttonF.setFont(font)
+        buttonRv.setFont(font)
+        buttonL.setFont(font)
+        buttonR.setFont(font)
+        buttonS.setFont(font)
+        buttonCCW.setFont(font)
+        buttonCW.setFont(font)
+        buttonTerminate.setFont(font)
 
-	def on_forward_button_clicked():
-	    actionParam = 1
-	    print (actionParam)
-	def on_reverse_button_clicked():
-	    actionParam = 2
-	def on_left_button_clicked():
-	    actionParam = 3
-	def on_right_button_clicked():
-	    actionParam = 4
-	    print (actionParam)
-	def on_CW_button_clicked():
-	    actionParam = 5
-	def on_CCW_button_clicked():
-	    actionParam = 6
-	def on_stop_button_clicked():
-	    actionParam = 0
+        def on_forward_button_clicked():
+            global actionCode
+            actionCode = 1
+            print (actionCode)
+        def on_reverse_button_clicked():
+            global actionCode
+            actionCode = 2
+        def on_left_button_clicked():
+            global actionCode
+            actionCode = 3
+        def on_right_button_clicked():
+            global actionCode
+            actionCode = 4
+            print (actionCode)
+        def on_CW_button_clicked():
+            global actionCode
+            actionCode = 5
+        def on_CCW_button_clicked():
+            global actionCode
+            actionCode = 6
+        def on_stop_button_clicked():
+            global actionCode
+            actionCode = 0
+        def on_terminate_button_clicked():
+            global actionCode
+            actionCode = 9
 
-	buttonF.clicked.connect(on_forward_button_clicked)
-	buttonRv.clicked.connect(on_reverse_button_clicked)
-	buttonL.clicked.connect(on_left_button_clicked)
-	buttonR.clicked.connect(on_right_button_clicked)
-	buttonCW.clicked.connect(on_CW_button_clicked)
-	buttonCCW.clicked.connect(on_CCW_button_clicked)
-	buttonS.clicked.connect(on_stop_button_clicked)
-
-	layout.setRowMinimumHeight(3,100)
-
-	layout.addWidget(buttonF,1,3)
-	layout.addWidget(buttonRv,3,3)
-	layout.addWidget(buttonL,2,1)
-	layout.addWidget(buttonR,2,5)
-	layout.addWidget(buttonCW,0,1)
-	layout.addWidget(buttonCCW,0,5)
-	layout.addWidget(buttonS,2,3)
-
-	window.setLayout(layout)
-	window.show()
-	app.exec_()
+        buttonF.clicked.connect(on_forward_button_clicked)
+        buttonRv.clicked.connect(on_reverse_button_clicked)
+        buttonL.clicked.connect(on_left_button_clicked)
+        buttonR.clicked.connect(on_right_button_clicked)
+        buttonCW.clicked.connect(on_CW_button_clicked)
+        buttonCCW.clicked.connect(on_CCW_button_clicked)
+        buttonS.clicked.connect(on_stop_button_clicked)
+        buttonTerminate.clicked.connect(on_terminate_button_clicked)
 
 
-# Create new threads
-thread1 = myThreadPrint(1, "Thread-1", 1)
-thread2 = myThreadPrint(2, "Thread-2", 2)
+        layout.setRowMinimumHeight(3,100)
 
-thread3 = myThreadUI(3, "THread-2UI", actionCode)
+        layout.addWidget(buttonF,1,3)
+        layout.addWidget(buttonRv,3,3)
+        layout.addWidget(buttonL,2,1)
+        layout.addWidget(buttonR,2,5)
+        layout.addWidget(buttonCW,0,1)
+        layout.addWidget(buttonCCW,0,5)
+        layout.addWidget(buttonS,2,3)
+        layout.addWidget(buttonTerminate,4,5)
 
-# Start new Threads
-thread1.start()
-thread2.start()
+        window.setLayout(layout)
+        window.show()
+        app.exec_()
+        #createUI(self.actionParam)
+        #actionCode = -1
+        print ("Exiting UI Thread")
+
+
+## thread logic here
+
+queue = Queue()
+
+#thread3 = Thread( target=thread3, args=("Thread-3 TCP", queue) )
+threadTCP = Thread( target=threadTCP, args=("Thread-4 UI", queue, port) )
+threadUI = Thread( target=threadUI, args=("Thread-4 UI", queue) )
+
 #thread3.start()
+threadTCP.start()
+threadUI.start()
+#thread3.join()
+threadTCP.join()
+threadUI.join()
 
-createUI(actionCode)
 
-print ("Exiting Main Thread")
+# wait for 2 seconds for everything to settle
+time.sleep(2)
+
+#verify actionCode changed
+print(actionCode)

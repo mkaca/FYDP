@@ -29,6 +29,24 @@ void setup() {
 
 }
 
+/* converts data (thermocouples, 2D position vector (with orientation),
+    EC sensor values, timestamp) into a single string
+     input: multiple string / ints / whatever the values are in/ and converts to a single string message 
+        with 0000 indicating beggining, 1111 indicating termination of each data packet,
+*/ 
+String encode(String A, StringB .... etc){
+  
+}
+
+
+/*
+ * Decode incoming string packet to tell us: action of user + acknolwedgement that things are okay
+ *  decode message (starts with 0000 and ends with 1111) to extract single action string from message --> SUPER SIMPLE
+ */
+String decode(String inComingMsg){
+  
+}
+
 void loop() {
 
   /*  OVERVIEW of LOGIC
