@@ -1,5 +1,7 @@
 
 #include <MSKMD_1003.h>
+#include <Adafruit_MAX31856.h>
+
 
 #define in1R 7  
 #define in2R 8  
