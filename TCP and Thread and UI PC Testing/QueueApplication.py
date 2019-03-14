@@ -1,103 +1,34 @@
-
 from threading import Thread
 from queue import Queue
 import time
 from PyQt5.QtWidgets import *
-import socket
 
-# action to send
 actionCode = 0
-# Message received from on-board PC
-msgRecv = 0
 
-# seconds before TCP times out
-timeOut = 10
-
-s = socket.socket()
-s.settimeout(timeOut)
-print ('global socket instance created')
-
-# reserve PORT so that it's not in use by something else:
-port = 12474
-
-######################################################
-
-
-# main thread for controlling TCP comms
-def threadTCP(threadname, q, port):
+def thread1(threadname, q):
     global actionCode
-    global msgRecv
-    print("threadTCP: ", actionCode)
-    # Bind it to the port
-    # Note that we have not typed any IP into the IP field..... we input an empty string ...
-    #     this makes server listen to requests coming from other computers on network
-    try:
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # to prevent binding
-        s.bind(('', port))
-    except socket.error as exc:
-        print ("Caught exception socket.error : %s" % exc)
+    for _ in range(5):
+        actionCode += 7
+        q.put(actionCode)
+        time.sleep(1)
+        print("thread2: ", actionCode)
 
-    print("socket binded to %s"%(port))
+def thread2(threadname, q):
+    global actionCode
+    for _ in range(5):
+        actionCode += 1
+        q.put(actionCode)
+        time.sleep(0.2)
+        print("thread2: ", actionCode)
+    q.put(None) # Poison pill
 
-    # make server listen to requests
-    s.listen(5)                # where 5 = max number of queued connections
-    print('socket is listening')
+def thread3(threadname, q):
+    global actionCode
+    for _ in range(10):
+        print("thread3: ", actionCode)
+        time.sleep(1)
 
-
-    try:
-        #establish connection with client
-        c, addr = s.accept()
-        c.send('Thank you for connecting')  
-        print ('got connection from', addr)
-    except KeyboardInterrupt:
-        print("No connection established. Terminating :( ")
-        s.close()
-        exit()
-    # flag for identifying if I'm waiting to send or recieve message
-    needToSend = 0
-    try:
-        loop = True
-        while loop: 
-            # obtain sensor data
-            print('trying to recv data from client')
-            msgRecv = c.recv(1024)
-            print("Message received from Client: %s" %msgRecv)
-            needToSend = 1
-
-            ############# TOOOOOOOOO DOOOOOOOOOOOOOOOO ################
-            # decode sensor info 
-            # store data in a file
-
-            # change the below line to something like 
-            #       01230123 or whatever that means send me more data!
-            
-            print('trying to send data to client')
-            c.sendall(str(actionCode))
-            needToSend = 0
-            time.sleep(0.2)
-            # kill socket if UI is killed
-            if (actionCode == -1):
-                break
-
-    except KeyboardInterrupt:
-        print("Ending program")
-
-    if not needToSend:
-        msgRecv = c.recv(1024)
-        print("FINAL message received and IGNORED: %s" %msgRecv)
-
-    c.send('9') # sends termination ID
-
-    # close connection
-    c.shutdown(2)   
-    c.close()
-    print("Terminated TCP")
-
-###################################################
-
-### Main Thread controlling UI ############
-
-def threadUI(threadname, q):
+def thread4(threadname, q):
         print ("Starting thread4")
         global actionCode
         app = QApplication([])
@@ -117,7 +48,6 @@ def threadUI(threadname, q):
         buttonCW = QPushButton('Turn CW')
         buttonCCW = QPushButton('Turn CCW')
         buttonS = QPushButton('STOP')
-        buttonTerminate = QPushButton('TERMINATE')
 
         buttonF.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
         buttonRv.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
@@ -126,7 +56,6 @@ def threadUI(threadname, q):
         buttonCW.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
         buttonCCW.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
         buttonS.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
-        buttonTerminate.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
 
         buttonF.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
         buttonRv.setStyleSheet('QPushButton {background-color: #A3C1DA; color: purple;}')
@@ -135,7 +64,6 @@ def threadUI(threadname, q):
         buttonCW.setStyleSheet('QPushButton {background-color: #D7C4DA; color: purple;}')
         buttonCCW.setStyleSheet('QPushButton {background-color: #D7C4DA; color: purple;}')
         buttonS.setStyleSheet('QPushButton {background-color: #B22222; color: white; }')
-        buttonTerminate.setStyleSheet('QPushButton {background-color: #CC0000; color: white; }')
 
         font = buttonF.font()
         font.setPointSize(24)
@@ -146,7 +74,6 @@ def threadUI(threadname, q):
         buttonS.setFont(font)
         buttonCCW.setFont(font)
         buttonCW.setFont(font)
-        buttonTerminate.setFont(font)
 
         def on_forward_button_clicked():
             global actionCode
@@ -171,9 +98,6 @@ def threadUI(threadname, q):
         def on_stop_button_clicked():
             global actionCode
             actionCode = 0
-        def on_terminate_button_clicked():
-            global actionCode
-            actionCode = 9
 
         buttonF.clicked.connect(on_forward_button_clicked)
         buttonRv.clicked.connect(on_reverse_button_clicked)
@@ -182,8 +106,6 @@ def threadUI(threadname, q):
         buttonCW.clicked.connect(on_CW_button_clicked)
         buttonCCW.clicked.connect(on_CCW_button_clicked)
         buttonS.clicked.connect(on_stop_button_clicked)
-        buttonTerminate.clicked.connect(on_terminate_button_clicked)
-
 
         layout.setRowMinimumHeight(3,100)
 
@@ -194,34 +116,33 @@ def threadUI(threadname, q):
         layout.addWidget(buttonCW,0,1)
         layout.addWidget(buttonCCW,0,5)
         layout.addWidget(buttonS,2,3)
-        layout.addWidget(buttonTerminate,4,5)
 
         window.setLayout(layout)
         window.show()
         app.exec_()
         #createUI(self.actionParam)
-        #actionCode = -1
-        print ("Exiting UI Thread")
-
-
-## thread logic here
+        print ("Exiting thread4")
 
 queue = Queue()
+"""
+thread1 = Thread( target=thread1, args=("Thread-1", queue) )
+thread2 = Thread( target=thread2, args=("Thread-2", queue) )
 
-#thread3 = Thread( target=thread3, args=("Thread-3 TCP", queue) )
-threadTCP = Thread( target=threadTCP, args=("Thread-4 UI", queue, port) )
-threadUI = Thread( target=threadUI, args=("Thread-4 UI", queue) )
+thread1.start()
+thread2.start()
+thread1.join()
+thread2.join()
+"""
 
-#thread3.start()
-threadTCP.start()
-threadUI.start()
-#thread3.join()
-threadTCP.join()
-threadUI.join()
+thread3 = Thread( target=thread3, args=("Thread-3 TCP", queue) )
+thread4 = Thread( target=thread4, args=("Thread-4 UI", queue) )
+
+thread3.start()
+thread4.start()
+thread3.join()
+thread4.join()
 
 
-# wait for 2 seconds for everything to settle
-time.sleep(2)
+time.sleep(3)
 
-#verify actionCode changed
 print(actionCode)
