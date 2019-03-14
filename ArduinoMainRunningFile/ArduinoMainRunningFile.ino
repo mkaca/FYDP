@@ -12,6 +12,9 @@
 String readString; // for reading serial
 unsigned short timeStart, timeEnd, timeDiff;  // required to find out how fast bus is
 
+// Declaring variables - **Probably need to split 2D_Pos into x-y coordinates**
+int tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, posX, posY, posYaw, Time;
+
 // initialize the driver
 MSKMD_1003 driveSystem(in1L, in2L, pwmL, in1R, in2R, pwmR);
 //initialize controller
@@ -29,23 +32,40 @@ void setup() {
 
 }
 
-/* converts data (thermocouples, 2D position vector (with orientation),
-    EC sensor values, timestamp) into a single string
-     input: multiple string / ints / whatever the values are in/ and converts to a single string message 
-        with 0000 indicating beggining, 1111 indicating termination of each data packet,
-*/ 
-String encode(String A, StringB .... etc){
-  
-}
 
-
-/*
- * Decode incoming string packet to tell us: action of user + acknolwedgement that things are okay
- *  decode message (starts with 0000 and ends with 1111) to extract single action string from message --> SUPER SIMPLE
- */
-String decode(String inComingMsg){
+  /* converts data (thermocouples, 2D position vector (with orientation),
+      EC sensor values, timestamp) into a single string
+       input: multiple string / ints / whatever the values are in/ and converts to a single string message 
+          with 0000 indicating beggining, 1111 indicating termination of each data packet,
   
-}
+          To call: 
+          String encoded = encode(tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, posX, posY, posYaw, Time);
+  */ 
+  String encode(int tc1, int tc2, int tc3, int tc4, int EC_O2, int EC_CO, int EC_CO2, int posX, int posY, int posYaw, int Time){
+
+    String start, end;
+    start = "0000";
+    end = "1111";
+
+    // Transforms int -->string
+    String str_tc1 = start + "11" + String(tc1) + end;
+    String str_tc2 = start + "12" + String(tc2) + end;
+    String str_tc3 = start + "13" +  String(tc3) + end;
+    String str_tc4 = start + "14" +  String(tc4) + end;
+    String str_EC_O2 =start + "21" +  String(EC_O2) + end;
+    String str_EC_CO = start + "22" +  String(EC_CO) + end;
+    String str_EC_CO2 = start+ "23" +  String(EC_CO2) + end;
+    String str_PosX = start + "31" + String(posX) + end;
+    String str_PosY = start + "32" + String(posY) + end;
+    String str_PosYaw = start + "33" + String(posYaw) + end;
+    String str_Time = start + "91" +  String(Time) + end;
+  
+     //Combines strings
+    String out;
+    out = str_tc1 + str_tc2 + str_tc3 + str_tc4 + str_EC_O2 + str_EC_CO + str_EC_CO2 + str_PosX + str_PosY + str_PosYaw + str_Time ;
+    return out;
+    }
+
 
 void loop() {
 

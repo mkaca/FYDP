@@ -1,0 +1,70 @@
+
+ 
+def decode(encoded):
+
+    decode =  encoded.split("0000")
+    
+    i=0
+
+    while i<len(decode):
+        
+        if decode[i].startswith('11'):
+            result = decode[i]
+            end = len(result)
+            tc1 = result[2:end-4]
+            print ("Thermocouple 1: " + tc1)
+            
+        if decode[i].startswith('12'):
+            result = decode[i]
+            end = len(result)
+            tc2 = result[2:end-4]
+            print ("Thermocouple 2: " + tc2)  
+        
+        if decode[i].startswith('13'):
+            result = decode[i]
+            end = len(result)
+            tc3 = result[2:end-4]
+            print ("Thermocouple 3: " + tc3)
+            
+        if decode[i].startswith('14'):
+            result = decode[i]
+            end = len(result)
+            tc4 = result[2:end-4]
+            print ("Thermocouple 4: " + tc4)  
+    
+        if decode[i].startswith('21'):
+            result = decode[i]
+            end = len(result)
+            O2 = result[2:end-4]
+            print ("O2: " + O2)  
+  
+        if decode[i].startswith('22'):
+            result = decode[i]
+            end = len(result)
+            CO = result[2:end-4]
+            print ("CO: " + CO)  
+            
+        if decode[i].startswith('23'):
+            result = decode[i]
+            end = len(result)
+            CO2 = result[2:end-4]
+            print ("CO2: " + CO2)              
+            
+        if decode[i].startswith('31'):
+            result = decode[i]
+            end = len(result)
+            Pos_2D = result[2:end-4]
+            print ("Position: " + Pos_2D)
+            
+        if decode[i].startswith('91'):
+            result = decode[i]
+            end = len(result)
+            Time = result[2:end-4]
+            print ("Time: " + Time)    
+        
+        i+=1
+    
+    return;
+    
+#The input to this function will be the encoded data
+decode("000011123111100001245611110000137891111000014987111100002112111110000222321111000023454111100003156511110000916761111")

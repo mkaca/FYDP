@@ -22,6 +22,107 @@ port = 12474
 
 ######################################################
 
+## Function for decoding string message!!
+### Also writes data to a textfile !!!!!!!
+#The input to this function will be the encoded data... for example:
+#decode("000011123111100001245611110000137891111000014987111100002112111110000222321111000023454111100003156511110000916761111")
+# ###
+#       FORMAT: 0000XXYYYYY1111, where XX is address, and YYYYYY is data
+####
+def decode(encoded):
+
+    # divide into segments
+    decode =  encoded.split("0000")
+
+    # For storing data in file
+    file = open("TestData.txt", "a")
+    
+    i=0
+
+    while i<len(decode):
+        
+        if decode[i].startswith('11'):
+            result = decode[i]
+            end = len(result)
+            tc1 = result[2:end-4]
+            file.write(str(tc1) + ", ")
+            print ("Thermocouple 1: " + tc1)
+            
+        if decode[i].startswith('12'):
+            result = decode[i]
+            end = len(result)
+            tc2 = result[2:end-4]
+            file.write(str(tc2) + ", ")
+            print ("Thermocouple 2: " + tc2)  
+        
+        if decode[i].startswith('13'):
+            result = decode[i]
+            end = len(result)
+            tc3 = result[2:end-4]
+            file.write(str(tc3) + ", ")
+            print ("Thermocouple 3: " + tc3)
+            
+        if decode[i].startswith('14'):
+            result = decode[i]
+            end = len(result)
+            tc4 = result[2:end-4]
+            file.write(str(tc4) + ", ")
+            print ("Thermocouple 4: " + tc4)  
+    
+        if decode[i].startswith('21'):
+            result = decode[i]
+            end = len(result)
+            O2 = result[2:end-4]
+            file.write(str(O2) + ", ")
+            print ("O2: " + O2)  
+  
+        if decode[i].startswith('22'):
+            result = decode[i]
+            end = len(result)
+            CO = result[2:end-4]
+            file.write(str(CO) + ", ")
+            print ("CO: " + CO)  
+            
+        if decode[i].startswith('23'):
+            result = decode[i]
+            end = len(result)
+            CO2 = result[2:end-4]
+            file.write(str(CO2) + ", ")
+            print ("CO2: " + CO2)              
+            
+        if decode[i].startswith('31'):
+            result = decode[i]
+            end = len(result)
+            posX = result[2:end-4]
+            file.write(str(posX) + ", ")
+            print ("PositionX: " + posX)
+
+        if decode[i].startswith('32'):
+            result = decode[i]
+            end = len(result)
+            posY = result[2:end-4]
+            file.write(str(posY) + ", ")
+            print ("PositionY: " + posY)
+
+        if decode[i].startswith('33'):
+            result = decode[i]
+            end = len(result)
+            posYaw = result[2:end-4]
+            file.write(str(posYaw) + ", ")
+            print ("PositionYaw: " + posYaw)
+            
+        if decode[i].startswith('91'):
+            result = decode[i]
+            end = len(result)
+            timeStamp = result[2:end-4]
+            file.write(str(timeStamp) + ", " + "\n")
+            print ("Time: " + timeStamp)    
+        
+        i+=1
+    file.close()
+    
+    return;
+
 
 # main thread for controlling TCP comms
 def threadTCP(threadname, q, port):
@@ -64,12 +165,8 @@ def threadTCP(threadname, q, port):
             print("Message received from Client: %s" %msgRecv)
             needToSend = 1
 
-            ############# TOOOOOOOOO DOOOOOOOOOOOOOOOO ################
-            # decode sensor info 
-            # store data in a file
-
-            # change the below line to something like 
-            #       01230123 or whatever that means send me more data!
+            #### decode message and save to file
+            decode(msgRecv)
             
             print('trying to send data to client')
             c.sendall(str(actionCode))

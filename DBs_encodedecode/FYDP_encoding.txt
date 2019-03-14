@@ -1,0 +1,156 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+//Thermocouple 1 = tc1 => 000011XXXXXX1111
+//Thermocouple 2 = tc2 => 000012XXXXXX1111
+//Thermocouple 3 = tc3 => 000013XXXXXX1111
+//Thermocouple 4 = tc4 => 000014XXXXXX1111
+
+//O2 sensor = EC_O2 => 000021XXXXXX1111
+//CO sensor = EC_CO => 000022XXXXXX1111
+//CO2 sensor = EC_CO2 => 000023XXXXXX1111
+
+//Position Vector = Pos_2D => 000031XXXXXX1111
+
+//Time Stamp = Time => 000091XXXXXX1111
+string encode(int tc1, int tc2, int tc3, int tc4, int EC_O2, int EC_CO, int EC_CO2, int Pos_2D, int Time); 
+string decode(string encoded);
+
+int main () 
+{
+   
+// Declaring variables - **Probably need to split 2D_Pos into x-y coordinates**
+    int tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, Pos_2D, Time;
+    string encoded, decoded;
+    
+// Used for testing ---> Change these to inputs from arduino
+    tc1 = 123;
+    tc2 = 456;
+    tc3 = 789;
+    tc4 = 987;
+    EC_O2 =121;
+    EC_CO = 232;
+    EC_CO2 = 454;
+    Pos_2D = 565;
+    Time = 676;
+    
+//Calling encoding function
+   encoded = encode(tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, Pos_2D, Time);
+   cout << "s1  is: " << encoded << endl;
+   
+//Calling decoding function   
+   decoded = decode(encoded);
+    return 0;
+}
+
+string encode(int tc1, int tc2, int tc3, int tc4, int EC_O2, int EC_CO, int EC_CO2, int Pos_2D, int Time){
+
+    string start, end;
+    start = "0000";
+    end = "1111";
+
+// Transforms int -->string
+    string str_tc1 = start + "11" + to_string(tc1) + end;
+    string str_tc2 = start + "12" + to_string(tc2) + end;
+    string str_tc3 = start + "13" +  to_string(tc3) + end;
+    string str_tc4 = start + "14" +  to_string(tc4) + end;
+    string str_EC_O2 =start + "21" +  to_string(EC_O2) + end;
+    string str_EC_CO = start + "22" +  to_string(EC_CO) + end;
+    string str_EC_CO2 = start+ "23" +  to_string(EC_CO2) + end;
+    string str_Pos_2D = start + "31" + to_string(Pos_2D) + end;
+    string str_Time = start + "91" +  to_string(Time) + end;
+
+//Combines strings
+    string out;
+    out = str_tc1 + str_tc2 + str_tc3 + str_tc4 + str_EC_O2 + str_EC_CO + str_EC_CO2 + str_Pos_2D + str_Time ;
+    
+    return out;
+    
+    }
+    
+    string decode(string encoded){
+    cout << "s122  is: " << encoded << endl;
+    
+    
+    return 0;
+    }
+
+
+
+
+
+
+
+
+
+
+    #include <iostream>
+#include <string>
+using namespace std;
+
+//Thermocouple 1 = tc1 => 000011XXXXXX1111
+//Thermocouple 2 = tc2 => 000012XXXXXX1111
+//Thermocouple 3 = tc3 => 000013XXXXXX1111
+//Thermocouple 4 = tc4 => 000014XXXXXX1111
+//O2 sensor = EC_O2 => 000021XXXXXX1111
+//CO sensor = EC_CO => 000022XXXXXX1111
+//CO2 sensor = EC_CO2 => 000023XXXXXX1111
+//Position Vector = Pos_2D => 000031XXXXXX1111
+//Time Stamp = Time => 000091XXXXXX1111
+
+
+string encode(int tc1, int tc2, int tc3, int tc4, int EC_O2, int EC_CO, int EC_CO2, int Pos_2D, int Time); 
+string decode(string encoded);
+
+int main () 
+{
+   
+// Declaring variables - **Probably need to split 2D_Pos into x-y coordinates**
+    int tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, Pos_2D, Time;
+    string encoded, decoded;
+    
+// Used for testing ---> Change these to inputs from arduino
+    tc1 = 123;
+    tc2 = 456;
+    tc3 = 789;
+    tc4 = 987;
+    EC_O2 =121;
+    EC_CO = 232;
+    EC_CO2 = 454;
+    Pos_2D = 565;
+    Time = 676;
+    
+//Calling encoding function
+   encoded = encode(tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, Pos_2D, Time);
+   cout << "s1  is: " << encoded << endl;
+   
+//Calling decoding function   
+   decoded = decode(encoded);
+    return 0;
+}
+
+string encode(int tc1, int tc2, int tc3, int tc4, int EC_O2, int EC_CO, int EC_CO2, int Pos_2D, int Time){
+
+    string start, end;
+    start = "0000";
+    end = "1111";
+
+// Transforms int -->string
+    string str_tc1 = start + "11" + to_string(tc1) + end;
+    string str_tc2 = start + "12" + to_string(tc2) + end;
+    string str_tc3 = start + "13" +  to_string(tc3) + end;
+    string str_tc4 = start + "14" +  to_string(tc4) + end;
+    string str_EC_O2 =start + "21" +  to_string(EC_O2) + end;
+    string str_EC_CO = start + "22" +  to_string(EC_CO) + end;
+    string str_EC_CO2 = start+ "23" +  to_string(EC_CO2) + end;
+    string str_Pos_2D = start + "31" + to_string(Pos_2D) + end;
+    string str_Time = start + "91" +  to_string(Time) + end;
+
+//Combines strings
+    string out;
+    out = str_tc1 + str_tc2 + str_tc3 + str_tc4 + str_EC_O2 + str_EC_CO + str_EC_CO2 + str_Pos_2D + str_Time ;
+    
+    return out;
+    
+    }
