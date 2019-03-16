@@ -32,7 +32,8 @@ port = 12474
 def decode(encoded):
 
     # divide into segments
-    decode =  encoded.split("0000")
+    print("Encoded data: ",encoded)
+    decode =  encoded.decode().split("0000")
 
     # For storing data in file
     file = open("TestData.txt", "a")
@@ -148,7 +149,7 @@ def threadTCP(threadname, q, port):
     try:
         #establish connection with client
         c, addr = s.accept()
-        c.send('Thank you for connecting')  
+        c.send(str.encode('Thank you for connecting'))  
         print ('got connection from', addr)
     except KeyboardInterrupt:
         print("No connection established. Terminating :( ")
@@ -169,7 +170,7 @@ def threadTCP(threadname, q, port):
             decode(msgRecv)
             
             print('trying to send data to client')
-            c.sendall(str(actionCode))
+            c.sendall(str.encode(str(actionCode)))
             needToSend = 0
             time.sleep(0.2)
             # kill socket if UI is killed
