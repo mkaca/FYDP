@@ -18,7 +18,7 @@ s.settimeout(timeOut)
 print ('global socket instance created')
 
 # reserve PORT so that it's not in use by something else:
-port = 12474
+port = 12476
 
 ######################################################
 

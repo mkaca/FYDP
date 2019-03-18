@@ -20,32 +20,42 @@ Wait for action from remote PC via TCP
 import serial
 import time
 import socket
+import subprocess
 
 #initial action message : STOP motor
 actionCode = 0
 
 # TCP socket init
 s = socket.socket()
-tCPPort = 12474
-s.settimeout(30) # increase to like 120 after testing is done
+tCPPort = 12476
+s.settimeout(10) # increase to like 120 after testing is done
+
+timeOutDuration = 5 # 5s for serial timeout (reading data)
 
 # serial init
 #serialPort = '/dev/ttyACM0'  # change this depending on port   # LINUX
 #serialPort = 'COM9'    # WINDOWS
 serialPort = '/dev/ttyACM0'
 k = 0
-s = ''
+sjoin = ''
 ser = 0
 commNotFound = 1
+
+# sets our network ip address
+#subprocess.call(['sudo', 'ifconfig', 'enp1s0' , '169.254.244.185', \
+#   'netmask', '255.255.255.0'])
 
 ### Connect to appropriate serial port 
 while commNotFound:
     try:
         serialPortBase = '/dev/ttyACM'
-        serialPort = s.join((serialPortBase,str(k)))
+        serialPort = sjoin.join((serialPortBase,str(k)))
+        subprocess.call(['sudo', 'chmod', '777', serialPort])
         ser = serial.Serial(serialPort,57600,timeout=5)
         commNotFound = 0
+        print('found serial port')
     except serial.SerialException as serErr:
+        print("port %s not found" %serialPort)
         k += 1
         if (k > 10):
             print ("NO PORT AVAILABLE!!!!")
@@ -55,7 +65,7 @@ time.sleep(1) # wait 1s for Arduino
 
 try:
     # try to connect
-    s.connect(('192.168.0.16'), tCPPort)
+    s.connect(('169.254.244.191', tCPPort))
     print ("connected successfully")
 
     """
@@ -74,16 +84,31 @@ try:
 
         # send action message to arduino
         ser.write(str.encode(str(actionCode)))
-        print ("Python value sent: ")
+        print ("Python value sent to Ard: ")
         time.sleep(0.08) # wait 80 ms to ensure all bytes are sent
 
         # Serial read section
 
         # Wait for connection to become available
-        print('Waiting for Arduino Serial',ser.inWaiting())
+        #print('Waiting for Arduino Serial',ser.inWaiting())
 
         # read all characters in buffer and converts to a string
-        msg = str(str.decode(ser.read(ser.inWaiting()))) 
+        msg = 0
+        # ensure message lenght is not 0
+        msgEmpty = 1
+        startTime = time.time()
+        while msgEmpty and time.time()-startTime < timeOutDuration:
+            msg = ser.read(ser.inWaiting())
+            if (len(msg) == 0):
+                print("message empty")
+            else:
+                print("message not empty YAY")
+                msgEmpty = 0
+            time.sleep(0.1)
+
+        msg = str.decode(msg)
+        #msg = str(2222124532111122221154311112222914839521111) 
+        msg = str(msg)
 
         print ("Message from arduino: ")
         print (msg)
@@ -92,11 +117,17 @@ try:
         # Sends data via tCP to remote PC
         print ("Trying to send data to remote PC")
         s.sendall(msg)
+        time.sleep(0.05)
 
         # receives data from TCP
         print ("Trying to receive data from remote PC")
-        actionCode = s.recv(1024)
-        print ("Messag received: %s" %actionCode)
+        recvdMessg = s.recv(1024) # type = string
+        time.sleep(0.05)
+        print (recvdMessg)
+        if len(recvdMessg) < 5:
+            global actionCode
+            actionCode = recvdMessg
+        print ("Message received: %s" %actionCode)
 
         # Check for termination code
         if (str(actionCode) == ("-1")):
@@ -108,7 +139,7 @@ try:
         time.sleep(0.001) # waits 1 ms
 
 except socket.error as exc:
-    print("Socket error ignored: %s" % exec)
+    print("SOcket error ignored: %s" % exc)
 
 
 # exits code (upon condition... so if actionCode is -1 (from remote PC))

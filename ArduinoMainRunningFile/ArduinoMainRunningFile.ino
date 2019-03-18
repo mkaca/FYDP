@@ -1,21 +1,22 @@
 
+
 #include <MSKMD_1003.h>
 #include <Adafruit_MAX31856.h>
 
 
-#define in1R 7  
-#define in2R 8  
-#define pwmR 11
+#define in1R 18  
+#define in2R 19  
+#define pwmR 20
 
-#define in1L 12  
-#define in2L 13 
+#define in1L 13  
+#define in2L 14 
 #define pwmL 15
 
-#define TCMISO 16  
-#define TCMOSI 17 
-#define TCCLK 18
-#define tc1CS 19  
-
+#define tc1CS 5 
+#define TCMOSI 10
+#define TCMISO 11
+#define TCCLK 12
+ 
 // DEFINE remaining pins for other circuits here!! 
 
 String readString; // for reading serial
@@ -32,7 +33,7 @@ int tc1 = 0, tc2 = 0, tc3 = 0, tc4 = 0, EC_O2 = 0, EC_CO = 0, EC_CO2 = 0, posX =
 MSKMD_1003 driveSystem(in1L, in2L, pwmL, in1R, in2R, pwmR);
 
 //initialize thermocouples with software SPI: CS, DI, DO, CLK
-Adafruit_MAX31856 maxTc1 = Adafruit_MAX31856(10, 11, 12, 13);
+Adafruit_MAX31856 maxTc1 = Adafruit_MAX31856(tc1CS, TCMOSI, TCMISO, TCCLK);
 
 void setup() {
   // ends any previously unclosed serial connections
@@ -40,7 +41,7 @@ void setup() {
   //Start serial
   Serial.begin(57600);
   while (!Serial) ; //wait until Serial ready
-  Serial.println("Serial Ready");
+  //Serial.println("Serial Ready");
 
   // begin drive system module
   driveSystem.begin();
@@ -70,7 +71,7 @@ void loop() {
   while (Serial.available())
   {
     timeStart = micros();
-    delayMicroseconds(10000);  //delay 10ms to allow buffer to fill 
+    delayMicroseconds(80000);  //delay 80ms to allow buffer to fill 
     if (Serial.available() >0)
     {
       char c = Serial.read();  //gets one byte from serial buffer   NOTE: THIS MAY BE TOO SHORT
@@ -95,30 +96,28 @@ void loop() {
       // include error code here when sending.... also stop motors
       driveSystem.stop();
      }
+     
 
      tc1 = int(maxTc1.readThermocoupleTemperature());
-     Serial.print("Thermocouple #1 Temp: "); 
-     Serial.println(tc1);
+     //Serial.print("Thermocouple #1 Temp: "); 
+     //Serial.println(tc1);
 
 
    // STOP DOING STUFF HEREEEEEE /////////////////////////////////////////////
    
-   timeEnd = micros();
-   timeDiff = timeEnd - timeStart;
-   //Serial.print("time diff: ");  Serial.println(timeDiff);  // prints out duration of loop
-  }
+   }
 
-  delayMicroseconds(1000);  // waits 1 ms
+  delayMicroseconds(10000);  // waits 10 ms
 
 
   // WRITE TO PC HERE 
 
   // arduino encodes data to send
   // ENCODED STRING IS HERE
-  String encodedMsgToSend = encode(tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2,  posX, posY, posYaw, Time);
-  Serial.println(encodedMsgToSend);
-    //Serial.write(ecodedString);
+  String encodedMsgToSend = encode(tc1, tc2, tc3, tc4, EC_O2, EC_CO, EC_CO2, posX, posY, posYaw, Time);
+  //Serial.println(encodedMsgToSend);
   writeString(encodedMsgToSend);
+  //Serial.write("22220432431111");
   Serial.flush();
   break;   // ensure this break isn't messing anything up
   }
@@ -149,7 +148,7 @@ void writeString(String stringData) { // Used to serially push out a String with
   String encode(int tc1, int tc2, int tc3, int tc4, int EC_O2, int EC_CO, int EC_CO2, int posX, int posY, int posYaw, int Time){
 
     String start, end;
-    start = "0000";
+    start = "2222";
     end = "1111";
 
     // Transforms int -->string
@@ -170,5 +169,3 @@ void writeString(String stringData) { // Used to serially push out a String with
     out = str_tc1 + str_tc2 + str_tc3 + str_tc4 + str_EC_O2 + str_EC_CO + str_EC_CO2 + str_PosX + str_PosY + str_PosYaw + str_Time ;
     return out;
     }
-
-
