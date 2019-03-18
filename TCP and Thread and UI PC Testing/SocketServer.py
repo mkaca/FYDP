@@ -7,7 +7,7 @@ s = socket.socket()
 print ('socket instance created')
 
 # reserve PORT so that it's not in use by something else:
-port = 12459
+port = 12460
 
 # Bind it to the port
 # Note that we have not typed any IP into the IP field..... we input an empty string ... this makes server

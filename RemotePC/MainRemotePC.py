@@ -29,11 +29,13 @@ port = 12474
 # ###
 #       FORMAT: 0000XXYYYYY1111, where XX is address, and YYYYYY is data
 ####
+## FUNFACT: message can't start with 0000, so will start with 2222
 def decode(encoded):
 
     # divide into segments
-    print("Encoded data: ",encoded)
-    decode =  encoded.decode().split("0000")
+    #print("Encoded data: ",encoded)
+    print("encoded non byte data:", encoded.decode())
+    decode =  encoded.decode().split("2222")
 
     # For storing data in file
     file = open("TestData.txt", "a")
@@ -136,6 +138,7 @@ def threadTCP(threadname, q, port):
     try:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # to prevent binding
         s.bind(('', port))
+        print( "Successfully binded socket")
     except socket.error as exc:
         print ("Caught exception socket.error : %s" % exc)
 
@@ -145,11 +148,12 @@ def threadTCP(threadname, q, port):
     s.listen(5)                # where 5 = max number of queued connections
     print('socket is listening')
 
+    c = 0 # init c
 
     try:
         #establish connection with client
         c, addr = s.accept()
-        c.send(str.encode('Thank you for connecting'))  
+        c.send(str.encode('Cool we connected'))  
         print ('got connection from', addr)
     except KeyboardInterrupt:
         print("No connection established. Terminating :( ")
@@ -163,6 +167,7 @@ def threadTCP(threadname, q, port):
             # obtain sensor data
             print('trying to recv data from client')
             msgRecv = c.recv(1024)
+            time.sleep(0.05)
             print("Message received from Client: %s" %msgRecv)
             needToSend = 1
 
@@ -172,7 +177,7 @@ def threadTCP(threadname, q, port):
             print('trying to send data to client')
             c.sendall(str.encode(str(actionCode)))
             needToSend = 0
-            time.sleep(0.2)
+            time.sleep(0.05)
             # kill socket if UI is killed
             if (actionCode == -1):
                 break

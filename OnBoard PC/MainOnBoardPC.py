@@ -108,7 +108,7 @@ try:
         time.sleep(0.001) # waits 1 ms
 
 except socket.error as exc:
-    print("SOcket error ignored: %s" % exec)
+    print("Socket error ignored: %s" % exec)
 
 
 # exits code (upon condition... so if actionCode is -1 (from remote PC))

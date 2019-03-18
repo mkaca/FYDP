@@ -11,10 +11,8 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
-  pinMode(sel0, OUTPUT);
   pinMode(pwm, OUTPUT);
 
-  digitalWrite(sel0,LOW);
   Serial.begin(9600);
 }
 
@@ -23,7 +21,7 @@ void loop() {
   
   //digitalWrite(pwm, HIGH);
   
-  delay(500);
+  delay(10500);
   runCW(3000);
   delay(4000);
   runCCW(3000);  
