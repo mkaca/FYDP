@@ -1,0 +1,2 @@
+#Coloring Map for  Encoder Class:
+Encoder KEYWORD1
