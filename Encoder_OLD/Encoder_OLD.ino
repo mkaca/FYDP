@@ -1,4 +1,4 @@
-// Meant to test encoder with magnets 
+// Meant to test encoder with magnets and with the encoder Custom library
 
 int encoderValue= 0;
 

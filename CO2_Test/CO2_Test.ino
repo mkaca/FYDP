@@ -5,6 +5,8 @@ int sensorValue = 0;
 //int sensor2Value = 0;
 //int sensor3Value = 0;
 
+#define valve1 6
+#define valve2 7
 
 void setup() {
   // put your setup code here, to run once:
@@ -29,5 +31,10 @@ void loop() {
 //  Serial.print("    ");
 //Serial.println(sensor3Value);
 
-delay(5000);
+delay(2500);
+
+//toggle valves
+
+
+delay(2500);
 }
