@@ -16,70 +16,81 @@
 
 #include "EncoderKanary.h"
 
-#include <stdlib.h>  // do I need this?
-
 
 // Constructor
-EncoderKanary::EncoderKanary(int8_t _intrEncL, int8_t _intrEncR){
+// Wheelbase and wheel diameter are in centimeters since x and y position are
+//   returned in cm
+EncoderKanary::EncoderKanary(int8_t _intrEncL, int8_t _intrEncR,
+  bool _directionCWL, bool _directionCWR, int _numOfMangets,
+  float _wheelDiam = 8 * 2.54, float _wheelBase = 25.5 * 2.54){
 
   intrEncL = _intrEncL;
   intrEncR = _intrEncR;
+  directionCWL = _directionCWL; 
+  directionCWR = _directionCWR;
+  numOfMangets = _numOfMangets; // # of magnets on each encoder
+  wheelDiam = _wheelDiam;
+  wheelBase = _wheelBase;
 
   initialized = false;
 }
 
-/*
-EncoderKanary::EncoderKanary()
-{
-  volatile unsigned long rRots = 0;
-  volatile unsigned long lRots = 0;
-  int wheelBase = 25.5 * 2.54;
-
-}
-*/
-
+// Sets pins
 void EncoderKanary::begin(void) {
   //define pin modes
-  pinMode(intrEncR, INPUT);
-  pinMode(intrEncL, INPUT);
+  pinMode(intrEncR, INPUT_PULLUP);
+  pinMode(intrEncL, INPUT_PULLUP);
+  // define interrupt to be triggerred upon RISING edge (low to high)
+  attachInterrupt(digitalPinToInterrupt(intrEncR), updateRight(), RISING);
+  attachInterrupt(digitalPinToInterrupt(intrEncL), updateLeft(), RISING);
 
   // init variables
   rRots = 0;  // counter rotations for each encoder
   lRots = 0;
-  wheelBase = 25.5 * 2.54; // value in cm
 
   initialized = true;
 }
 
-void EncoderKanary::updateLeft(uint8_t direction)
+//sets direction variable for when motors spin the other way
+// NEED TO manually set direction everytime motor function is called
+//   TODO: link motor driver with encoder 
+void EncoderKanary::changeDirection(bool leftDirCW, bool rightDirCW){
+  directionCWL = (leftDirCW) ? 1 : 0;
+  directionCWR = (rightDirCW) ? 1 : 0;
+}
+
+void EncoderKanary::updateLeft(void)
 {
     //Call this when the left wheel hits a magnet
     //If direction is 1 -> CW; if 0 -> CCW
-    if (direction == 1)
+    if (directionCWL == 1)
     {lRots++;}
     else {lRots--;}
 }
 
-void EncoderKanary::updateRight(uint8_t direction)
+void EncoderKanary::updateRight(void)
 {
     //Call this when the right wheel hits a magnet
     //If direction is 1 -> CW; if 0 -> CCW
-    if (direction == 1)
+    if (directionCWR == 1)
     {rRots++;}
     else {rRots--;}
 }
 
-void EncoderKanary::reset()
+void EncoderKanary::reset(void)
 {
   rRots = 0;
   lRots = 0;
 }
 
-int EncoderKanary::posConverter(add params)
+// returns position array of robot
+
+// TODO: add currentX,Y,Yaw in here somewhere!!!!!!!!
+int EncoderKanary::checkPosition(int currentX, int currentY, int currentYaw)
 {
   //This will convert the current motor rotations into x and y coordinates in cm
-  int lDist = (lRots * M_Pi * 8 * 2.54) / 4;
-  int rDist = (rRots * M_Pi * 8 * 2.54) / 4;
+  int lDist = (lRots * M_PI * wheelDiam) / numOfMangets;
+  int rDist = (rRots * M_PI * wheelDiam) / numOfMangets;
 
   /*
   Assuming the robot travels in an arc and knowing how far each wheel travels
@@ -88,14 +99,17 @@ int EncoderKanary::posConverter(add params)
   */
 
   int turnRadius = (lDist * wheelBase) / (rDist - lDist);
-  int yew = lDist/(M_Pi * turnRadius * 2) * 360;
-  int yCoord = (turnRadius + (0.5 * wheelBase)) * M_sin(yew);
-  int xCoord = (turnRadius + (0.5 * wheelBase)) - (turnRadius + (0.5 * wheelBase)) * M_cos(yew);
+  int yaw = lDist/(M_PI * turnRadius * 2) * 360;
+  int yCoord = (turnRadius + (0.5 * wheelBase)) * sin(yaw) ;
+  int xCoord = (turnRadius + (0.5 * wheelBase)) - (turnRadius + (0.5 * wheelBase)) * cos(yaw);
 
 
   int position[2] = {0};
   position[0] = xCoord;
   position[1] = yCoord;
-  position[2] = yew;
+  position[2] = yaw;
+
+  // resets position to prevent position arrray from amalgamating error
+  reset();
   return position;
 }
