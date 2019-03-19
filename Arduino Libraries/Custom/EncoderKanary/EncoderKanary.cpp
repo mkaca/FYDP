@@ -22,7 +22,7 @@
 //   returned in cm
 EncoderKanary::EncoderKanary(int8_t _intrEncL, int8_t _intrEncR,
   bool _directionCWL, bool _directionCWR, int _numOfMangets,
-  float _wheelDiam = 8 * 2.54, float _wheelBase = 25.5 * 2.54){
+  float _wheelDiam, float _wheelBase){
 
   intrEncL = _intrEncL;
   intrEncR = _intrEncR;
@@ -41,8 +41,8 @@ void EncoderKanary::begin(void) {
   pinMode(intrEncR, INPUT_PULLUP);
   pinMode(intrEncL, INPUT_PULLUP);
   // define interrupt to be triggerred upon RISING edge (low to high)
-  attachInterrupt(digitalPinToInterrupt(intrEncR), updateRight(), RISING);
-  attachInterrupt(digitalPinToInterrupt(intrEncL), updateLeft(), RISING);
+  //attachInterrupt(digitalPinToInterrupt(intrEncR), updateRight, RISING);
+  //attachInterrupt(digitalPinToInterrupt(intrEncL), updateLeft, RISING);
 
   // init variables
   rRots = 0;  // counter rotations for each encoder
@@ -85,8 +85,8 @@ void EncoderKanary::reset(void)
 
 // returns position array of robot
 
-// TODO: add currentX,Y,Yaw in here somewhere!!!!!!!!
-int EncoderKanary::checkPosition(int currentX, int currentY, int currentYaw)
+// TODO: add currentX,Y,Yaw in 3 int calculations somewhere
+void EncoderKanary::updateCurrentPosition(void)
 {
   //This will convert the current motor rotations into x and y coordinates in cm
   int lDist = (lRots * M_PI * wheelDiam) / numOfMangets;
@@ -99,17 +99,19 @@ int EncoderKanary::checkPosition(int currentX, int currentY, int currentYaw)
   */
 
   int turnRadius = (lDist * wheelBase) / (rDist - lDist);
+
+  ////
+  // ADD previous positions into here somewhere
+  ///////
+  //////
   int yaw = lDist/(M_PI * turnRadius * 2) * 360;
   int yCoord = (turnRadius + (0.5 * wheelBase)) * sin(yaw) ;
   int xCoord = (turnRadius + (0.5 * wheelBase)) - (turnRadius + (0.5 * wheelBase)) * cos(yaw);
 
-
-  int position[2] = {0};
-  position[0] = xCoord;
-  position[1] = yCoord;
-  position[2] = yaw;
+  currentPosX = xCoord;
+  currentPosY = yCoord;
+  currentPosYaw = yaw;
 
   // resets position to prevent position arrray from amalgamating error
   reset();
-  return position;
 }

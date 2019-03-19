@@ -103,6 +103,12 @@ void loop() {
      //Serial.println(tc1);
 
 
+     /*
+     * Call updatePositionFunction  from ENCODER
+     * Assign x,y,yaw to transferrable ints
+     */
+
+
    // STOP DOING STUFF HEREEEEEE /////////////////////////////////////////////
    
    }
