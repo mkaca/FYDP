@@ -1,76 +1,129 @@
-  // TRIED:    
-  /// OUTB1 GRND 
-  /// OUTB1 OUTB2 nothing
-  // OUTB1 OUTA1 nothing
-#define in1 7  
-#define in2 8  
-#define sel0 10
-#define pwm 11
+#define in1L 52 
+#define in2L 53  
+#define pwmL 2
+
+#define in1R 31 
+#define in2R 30  
+#define pwmR 3
+
+void stopMotorL(){
+  digitalWrite(in2L, LOW);
+  digitalWrite(in1L,LOW);
+  Serial.println("STOPPED");
+  delay(25); // delays 25 ms to attenuate transient errors
+}
+
+
+void stopMotorR(){
+  digitalWrite(in2R, LOW);
+  digitalWrite(in1R,LOW);
+  Serial.println("STOPPED");
+  delay(25); // delays 25 ms to attenuate transient errors
+}
+
+void runCWL(int duration){
+  float initTime = millis();
+  float endTime = millis();
+  digitalWrite(in1L,LOW);
+  digitalWrite(in2L,HIGH);
+  
+  Serial.print(initTime);
+    Serial.print(" MOVING CWL ");
+    Serial.println(endTime);
+  while (endTime - initTime < duration){ // %10 duty cycle for testing
+    endTime = millis();
+    digitalWrite(pwmL, 1);
+    delayMicroseconds(300);
+    digitalWrite(pwmL, 0);
+    delayMicroseconds(700);
+  }
+  stopMotorL();
+}
+
+void runCCWL(int duration){
+  float initTime = millis();
+  float endTime = millis();
+  digitalWrite(in2L,LOW);
+  digitalWrite(in1L,HIGH);
+  
+  Serial.print(initTime);
+    Serial.print(" MOVING CCWL ");
+    Serial.println(endTime);
+  while (endTime - initTime < duration){ // %10 duty cycle for testing
+    endTime = millis();
+    digitalWrite(pwmL, 1);
+    delayMicroseconds(300);
+    digitalWrite(pwmL, 0);
+    delayMicroseconds(700);
+  }
+  stopMotorL();
+}
+
+void runCWR(int duration){
+  float initTime = millis();
+  float endTime = millis();
+  digitalWrite(in1R,LOW);
+  digitalWrite(in2R,HIGH);
+  
+  Serial.print(initTime);
+    Serial.print(" MOVING CWR ");
+    Serial.println(endTime);
+  while (endTime - initTime < duration){ // %10 duty cycle for testing
+    endTime = millis();
+    digitalWrite(pwmR, 1);
+    delayMicroseconds(300);
+    digitalWrite(pwmR, 0);
+    delayMicroseconds(700);
+  }
+  stopMotorR();
+}
+
+void runCCWR(int duration){
+  float initTime = millis();
+  float endTime = millis();
+  digitalWrite(in2R,LOW);
+  digitalWrite(in1R,HIGH);
+  
+  Serial.print(initTime);
+    Serial.print(" MOVING CCWR ");
+    Serial.println(endTime);
+  while (endTime - initTime < duration){ // %10 duty cycle for testing
+    endTime = millis();
+    digitalWrite(pwmR, 1);
+    delayMicroseconds(300);
+    digitalWrite(pwmR, 0);
+    delayMicroseconds(700);
+  }
+  stopMotorR();
+}
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
-  pinMode(pwm, OUTPUT);
+  pinMode(in1L, OUTPUT);
+  pinMode(in2L, OUTPUT);
+  pinMode(pwmL, OUTPUT);
+
+  pinMode(in1R, OUTPUT);
+  pinMode(in2R, OUTPUT);
+  pinMode(pwmR, OUTPUT);
 
   Serial.begin(9600);
+  delay(2000);
+  stopMotorR();
+  stopMotorL();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   
   //digitalWrite(pwm, HIGH);
-  
-  delay(10500);
-  runCW(3000);
-  delay(4000);
-  runCCW(3000);  
-  delay(3500);
+  //stopMotor();
+  delay(3000);
+  runCWL(10000);
+  runCWR(10000);
+  delay(2500);
+  runCCWL(5000);
+  runCCWR(5000);  
+  delay(2500);
 
 }
-
-void stopMotor(){
-  digitalWrite(in2, LOW);
-  digitalWrite(in1,LOW);
-  Serial.println("STOPPED");
-  delay(25); // delays 25 ms to attenuate transient errors
-}
-
-void runCW(int duration){
-  float initTime = millis();
-  float endTime = millis();
-  digitalWrite(in1,LOW);
-  digitalWrite(in2,HIGH);
-  
-  Serial.print(initTime);
-    Serial.print(" MOVING CW ");
-    Serial.println(endTime);
-  while (endTime - initTime < duration){ // %10 duty cycle for testing
-    endTime = millis();
-    digitalWrite(pwm, 1);
-    delayMicroseconds(100);
-    digitalWrite(pwm, 0);
-    delayMicroseconds(900);
-  }
-  stopMotor();
-}
-
-void runCCW(int duration){
-  float initTime = millis();
-  float endTime = millis();
-  digitalWrite(in2,LOW);
-  digitalWrite(in1,HIGH);
-  
-  Serial.print(initTime);
-    Serial.print(" MOVING CCW ");
-    Serial.println(endTime);
-  while (endTime - initTime < duration){ // %10 duty cycle for testing
-    endTime = millis();
-    digitalWrite(pwm, 1);
-    delayMicroseconds(100);
-    digitalWrite(pwm, 0);
-    delayMicroseconds(900);
-  }
-  stopMotor();
-}
-
