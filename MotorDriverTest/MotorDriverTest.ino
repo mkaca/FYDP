@@ -1,14 +1,19 @@
 #define in1L 52 
 #define in2L 53  
-#define pwmL 2
+#define pwmL 50
 
-#define in1R 31 
-#define in2R 30  
-#define pwmR 3
+#define in1R 52 
+#define in2R 5  
+#define pwmR 6
+
+int offTime = 900;
+int onTime = 1000 - offTime;
+
 
 void stopMotorL(){
   digitalWrite(in2L, LOW);
   digitalWrite(in1L,LOW);
+  //digitalWrite(pwmL,LOW);
   Serial.println("STOPPED");
   delay(25); // delays 25 ms to attenuate transient errors
 }
@@ -17,6 +22,7 @@ void stopMotorL(){
 void stopMotorR(){
   digitalWrite(in2R, LOW);
   digitalWrite(in1R,LOW);
+  //digitalWrite(pwmR,LOW);
   Serial.println("STOPPED");
   delay(25); // delays 25 ms to attenuate transient errors
 }
@@ -33,9 +39,9 @@ void runCWL(int duration){
   while (endTime - initTime < duration){ // %10 duty cycle for testing
     endTime = millis();
     digitalWrite(pwmL, 1);
-    delayMicroseconds(300);
+    delayMicroseconds(onTime);
     digitalWrite(pwmL, 0);
-    delayMicroseconds(700);
+    delayMicroseconds(offTime);
   }
   stopMotorL();
 }
@@ -45,16 +51,18 @@ void runCCWL(int duration){
   float endTime = millis();
   digitalWrite(in2L,LOW);
   digitalWrite(in1L,HIGH);
-  
+
   Serial.print(initTime);
-    Serial.print(" MOVING CCWL ");
-    Serial.println(endTime);
+  Serial.print(" MOVING CCWL ");
+  Serial.println(endTime);
+  //analogWrite(pwmL, 55);
+  //delay(duration);
   while (endTime - initTime < duration){ // %10 duty cycle for testing
     endTime = millis();
     digitalWrite(pwmL, 1);
-    delayMicroseconds(300);
+    delayMicroseconds(onTime);
     digitalWrite(pwmL, 0);
-    delayMicroseconds(700);
+    delayMicroseconds(offTime);
   }
   stopMotorL();
 }
@@ -71,9 +79,9 @@ void runCWR(int duration){
   while (endTime - initTime < duration){ // %10 duty cycle for testing
     endTime = millis();
     digitalWrite(pwmR, 1);
-    delayMicroseconds(300);
+    delayMicroseconds(onTime);
     digitalWrite(pwmR, 0);
-    delayMicroseconds(700);
+    delayMicroseconds(offTime);
   }
   stopMotorR();
 }
@@ -90,9 +98,9 @@ void runCCWR(int duration){
   while (endTime - initTime < duration){ // %10 duty cycle for testing
     endTime = millis();
     digitalWrite(pwmR, 1);
-    delayMicroseconds(300);
+    delayMicroseconds(onTime);
     digitalWrite(pwmR, 0);
-    delayMicroseconds(700);
+    delayMicroseconds(offTime);
   }
   stopMotorR();
 }
@@ -119,11 +127,11 @@ void loop() {
   //digitalWrite(pwm, HIGH);
   //stopMotor();
   delay(3000);
-  runCWL(10000);
-  runCWR(10000);
+  //runCWR(5000);
+  runCWL(5000);
   delay(2500);
+  //runCCWR(5000);  
   runCCWL(5000);
-  runCCWR(5000);  
   delay(2500);
 
 }
