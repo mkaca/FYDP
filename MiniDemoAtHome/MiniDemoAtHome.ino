@@ -1,4 +1,4 @@
-#define in1 52 
+#define in1 52
 #define in2 53  
 #define pwm 50
 
@@ -68,11 +68,11 @@ void loop() {
       Serial.print("Number received: ");
       Serial.println(rx_byte);
       if (rx_byte == '1'){
-        runFwd(2000);
+        runFwd(3000);
         Serial.println("Going Forward");
       }
       else if(rx_byte == '2'){
-        runBwd(2000);
+        runBwd(3000);
         Serial.println("Going backwards");
       }
       else if(rx_byte == '6'){

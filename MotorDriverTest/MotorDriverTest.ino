@@ -2,11 +2,11 @@
 #define in2L 53  
 #define pwmL 50
 
-#define in1R 52 
+#define in1R 48
 #define in2R 5  
 #define pwmR 6
 
-int offTime = 900;
+int offTime = 850;
 int onTime = 1000 - offTime;
 
 
@@ -56,14 +56,16 @@ void runCCWL(int duration){
   Serial.print(" MOVING CCWL ");
   Serial.println(endTime);
   //analogWrite(pwmL, 55);
-  //delay(duration);
-  while (endTime - initTime < duration){ // %10 duty cycle for testing
+  digitalWrite(pwmL,HIGH);
+  delay(duration);
+  /*while (endTime - initTime < duration){ // %10 duty cycle for testing
     endTime = millis();
     digitalWrite(pwmL, 1);
     delayMicroseconds(onTime);
     digitalWrite(pwmL, 0);
     delayMicroseconds(offTime);
-  }
+  }*/
+  
   stopMotorL();
 }
 
@@ -126,12 +128,12 @@ void loop() {
   
   //digitalWrite(pwm, HIGH);
   //stopMotor();
-  delay(3000);
+  delay(200);
   //runCWR(5000);
-  runCWL(5000);
-  delay(2500);
+  //runCWL(3000);
+  //delay(2500);
   //runCCWR(5000);  
   runCCWL(5000);
-  delay(2500);
+  //delay(2500);
 
 }
